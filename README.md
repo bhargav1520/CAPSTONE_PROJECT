@@ -1,121 +1,151 @@
+# CAPSTONE_PROJECT
 
-# IEMS: Integrated Energy Management System
+Integrated Energy Management System for:
+- synthetic load generation,
+- PV + battery + grid simulation,
+- scenario comparison and optimization,
+- summary report generation.
 
-This project provides a modular simulation framework for energy management, including synthetic load generation, simulation engine, and data processing tools. It is designed for research, prototyping, and educational use in distributed energy systems, microgrids, and smart grid analytics.
+## 1) Project Structure
 
----
-
-## 📁 Folder Structure
-
-```
-IEMS/
-├── .gitignore                # Git ignore rules (excludes Datasets/ and other files)
-├── requirements.txt          # Python dependencies for the project
-├── Datasets/                 # Raw smart meter data (not tracked in git)
-│   └── Smart_meter/          # Smart meter CSV files (raw input)
-├── outputs/                  # Processed data and intermediate outputs
-│   ├── cleaned_hourly.csv    # Cleaned hourly load data
-│   └── daily_profiles.npy    # Numpy array of daily load profiles
-├── results/                  # Final simulation results
-│   └── simulation_outputs.csv# Output from simulation runs
-├── simulation_engine/        # Core simulation modules and tests
-│   ├── battery_model.py      # Battery storage model
-│   ├── economics.py          # Economic calculations (cost, tariff)
-│   ├── energy_flow.py        # Energy flow logic (solar, battery, grid)
-│   ├── load_model.py         # Load profile model
-│   ├── simulator.py          # Main simulation runner
-│   ├── solar_model.py        # Solar PV generation model
-│   └── ...                   # Additional test scripts and cache
-├── synthetic_load/           # Synthetic load generation and validation
-│   ├── data_preprocessing.py # Preprocess raw data for modeling
-│   ├── markov_model.py       # Markov model for synthetic load
-│   ├── train_kmeans.py       # KMeans clustering for load profiles
-│   ├── validate_model.py     # Model validation scripts
-│   ├── markov_transition.npy # Markov model transition matrix
-│   ├── metadata.json         # Metadata for synthetic load
-│   ├── synthetic_load_test.ipynb # Jupyter notebook for testing
-│   └── README.md             # Details for synthetic load module
-└── ...
-```
-
----
-
-## 🧩 Module Descriptions
-
-- **synthetic_load/**: Scripts and data for generating, validating, and analyzing synthetic load profiles using Markov models and clustering.
-└── ...
----
-
-## ⚡ Quick Start
-
-1. **Install dependencies**
-	- (Populate requirements.txt with needed packages, e.g., numpy, pandas, scikit-learn, matplotlib, joblib)
-	- `pip install -r requirements.txt`
-
-2. **Prepare Data**
-	- Place raw smart meter CSVs in `Datasets/Smart_meter/`.
-	- Run `synthetic_load/data_preprocessing.py` to generate cleaned hourly data and daily profiles.
-
-3. **Generate Synthetic Load**
-	- Run `synthetic_load/train_kmeans.py` to cluster daily profiles and save the KMeans model.
-	- Run `synthetic_load/markov_model.py` to build the Markov transition matrix and generate synthetic load.
-
-4. **Validate Synthetic Load**
-	- Run `synthetic_load/validate_model.py` to compare synthetic and real load profiles, and compute error metrics.
-
-5. **Run Simulation**
-	- Use the simulation engine (`simulation_engine/`) to simulate energy flows, battery operation, and solar generation using either real or synthetic load profiles.
-
----
-
-## 🔄 Example Scenario & Workflow
-
-Suppose you want to simulate a microgrid with a solar-battery system for a residential community, but only have a few months of smart meter data. You want to:
-
-1. **Expand your dataset** by generating realistic synthetic load profiles for a full year.
-2. **Test different system sizes** (solar, battery) and tariff structures.
-3. **Analyze performance** (cost savings, grid import, battery cycling).
-
-**Workflow:**
-
-1. Place your smart meter CSVs in `Datasets/Smart_meter/`.
-2. Run the scripts in `synthetic_load/` to preprocess, cluster, and generate synthetic load.
-3. Validate the synthetic load using the provided notebook or scripts.
-4. Use the simulation engine to run scenarios with different system parameters.
-5. Review results in `results/` and visualize with the provided notebooks.
-
----
-
-## 🛠️ Extending the Project
-
-- Add new clustering or Markov model variants in `synthetic_load/`.
-- Integrate new DER (Distributed Energy Resource) models in `simulation_engine/`.
-- Add economic or policy modules for tariff and incentive analysis.
-
----
-
-## 📄 License & Contact
-
-This project is open for academic and research use. For questions or contributions, contact the project maintainer.
+```text
+Capstone_Project/
+	application/
+		report_generator.py
+		scenario_generator.py
+	optimization/
+		optimizer.py
+	outputs/
+		cleaned_hourly.csv
+		daily_profiles.npy
+		weather_irradiance.csv
+		test_simulation.csv
+		simulation_results_formatted.txt
+	results/
+		simulation_outputs.csv
+		optimization_results.csv
+		report_summary.json
+	simulation_engine/
+		run_simulation.py
+		simulator.py
+		load_model.py
+		solar_model.py
+		battery_model.py
+		energy_flow.py
+		economics.py
+		weather_solar_fetch.py
+	synthetic_load/
+		data_preprocessing.py
+		train_kmeans.py
+		markov_model.py
+		validate_model.py
+		metadata.json
+		markov_transition.npy
 ```
 
-## Folder Specifications
-- **Datasets/**: Place all raw smart meter data here. This folder is excluded from git to save space.
-- **outputs/**: Contains processed data, such as cleaned hourly load profiles and numpy arrays.
-- **results/**: Stores final outputs from simulation runs for analysis and reporting.
-- **simulation_engine/**: Main simulation code, including models for battery, solar, load, and the simulation runner. Also contains test scripts for each module.
-- **synthetic_load/**: Scripts and data for generating synthetic load profiles using Markov models and clustering, as well as validation and analysis tools.
+## 2) How the Simulation Works
 
+Main flow:
+1. Load profile is read from `outputs/cleaned_hourly.csv`.
+2. Solar generation is computed from `outputs/weather_irradiance.csv` (`shortwave_radiation` or `ghi_wm2`) and system size (`solar_kw`).
+3. Energy dispatch order per hour:
+	 - Solar -> Load
+	 - Remaining Solar -> Battery charge
+	 - Battery discharge -> Remaining Load
+	 - Grid -> Remaining unmet Load
+	 - Unused Solar -> Curtailed Solar
+4. Hourly values are aggregated into summary metrics.
 
-## Notes
-- The `Datasets/` folder is excluded from version control due to large file sizes. Place your raw data here.
-- See `simulation_engine/README.md` and `synthetic_load/README.md` for module-specific details.
-- Install dependencies from `requirements.txt`.
+Core implementation files:
+- `simulation_engine/run_simulation.py`: entry-point script.
+- `simulation_engine/simulator.py`: orchestrates models and computes summary.
+- `simulation_engine/energy_flow.py`: dispatch logic and result tracking.
+- `simulation_engine/battery_model.py`: SoC, charge/discharge limits, efficiency.
+- `simulation_engine/solar_model.py`: PV generation model.
+- `simulation_engine/load_model.py`: load input parser.
 
-## Getting Started
-1. Clone the repository.
-2. Install dependencies: `pip install -r requirements.txt`
-3. Add your data to `Datasets/Smart_meter/`.
-4. Run scripts in `synthetic_load/` and `simulation_engine/` as needed.
+## 3) Inputs and Outputs
 
----
+### Inputs
+- `outputs/cleaned_hourly.csv`
+	- Expected load column: `t_kWh` or `load_kWh` or `load_kwh`
+- `outputs/weather_irradiance.csv`
+	- Expected irradiance column: `shortwave_radiation` or `ghi_wm2`
+- Runtime parameters (in `simulation_engine/run_simulation.py` or custom script)
+	- `solar_kw`
+	- `battery_kwh`
+	- `battery_charge_kw`
+	- `battery_discharge_kw`
+
+### Outputs
+- `outputs/test_simulation.csv`
+	- Hourly columns: `load, solar_available, solar_used, battery_charge, battery_discharge, curtailed_solar, grid, soc`
+- `outputs/simulation_results_formatted.txt`
+	- Human-readable hourly table + summary
+- `results/optimization_results.csv`
+	- Design-space results for different PV/battery sizes
+- `results/report_summary.json`
+	- Final KPI summary
+
+## 4) Key Metrics Explained
+
+- `Total Load`: Sum of hourly load.
+- `Grid Used`: Sum of hourly grid import.
+- `Solar Used`: Solar consumed directly by load.
+- `Battery Discharge`: Energy delivered from battery to load.
+- `Solar Curtailed`: Generated solar that was neither consumed nor stored.
+- `Average SoC (%)`: Mean battery state of charge.
+- `Grid Dependency (%)`: `(Grid Used / Total Load) * 100`.
+
+## 5) Quick Start
+
+```bash
+pip install -r requirements.txt
+python -m simulation_engine.run_simulation
+```
+
+Optional:
+- Fetch weather data into `outputs/weather_irradiance.csv`:
+
+```bash
+python -m simulation_engine.weather_solar_fetch
+```
+
+- Run optimization:
+
+```bash
+python -m optimization.optimizer
+```
+
+- Generate report JSON:
+
+```bash
+python -m application.report_generator
+```
+
+## 6) Synthetic Load Pipeline
+
+Use `synthetic_load/` when you need training or synthetic profile generation:
+1. `synthetic_load/data_preprocessing.py`
+2. `synthetic_load/train_kmeans.py`
+3. `synthetic_load/markov_model.py`
+4. `synthetic_load/validate_model.py`
+
+Generated artifacts include:
+- `synthetic_load/markov_transition.npy`
+- `synthetic_load/metadata.json`
+- model artifacts like `synthetic_load/kmeans_model.pkl`
+
+## 7) Recommended Data Management
+
+To avoid losing old experiments:
+- Keep training artifacts under `synthetic_load/`.
+- Keep simulation run outputs under `outputs/` and `results/`.
+- Create dated snapshot folders before major reruns.
+- Commit snapshots to Git for reproducibility.
+
+## 8) Notes
+
+- `Datasets/` (if used) is typically ignored in Git because of size.
+- Use relative paths from project root when running modules.
+- Python module mode (`python -m ...`) is preferred over direct script execution.
