@@ -1,110 +1,57 @@
-# battery_model.py
-# This module handles the modeling of battery storage for the simulation engine.
-
 class BatteryModel:
-    """
-    Battery Energy Storage Model
-    ----------------------------
-    Models charging, discharging, and state of charge (SoC)
-    """
-
     def __init__(
         self,
         capacity_kwh,
         max_charge_kw,
         max_discharge_kw,
-        charge_efficiency=0.95,
-        discharge_efficiency=0.95,
-        initial_soc=0.5
+        efficiency=0.9,
+        initial_soc=0.5,
+        min_soc=0.2,
+        max_soc=1.0
     ):
-        """
-        Parameters
-        ----------
-        capacity_kwh : float
-            Total battery capacity (kWh)
-        max_charge_kw : float
-            Maximum charging power (kW)
-        max_discharge_kw : float
-            Maximum discharging power (kW)
-        charge_efficiency : float
-            Charging efficiency (0–1)
-        discharge_efficiency : float
-            Discharging efficiency (0–1)
-        initial_soc : float
-            Initial state of charge (0–1)
-        """
         self.capacity_kwh = capacity_kwh
         self.max_charge_kw = max_charge_kw
         self.max_discharge_kw = max_discharge_kw
-        self.charge_efficiency = charge_efficiency
-        self.discharge_efficiency = discharge_efficiency
+        self.efficiency = max(0.0, min(1.0, efficiency))
 
-        self.soc = initial_soc * capacity_kwh
+        self.min_soc_fraction = max(0.0, min(1.0, min_soc))
+        self.max_soc_fraction = max(self.min_soc_fraction, min(1.0, max_soc))
 
-    # --------------------------------------------------
-    def charge(self, energy_kwh):
-        """
-        Charge the battery
+        self.soc = max(self.min_soc_fraction, min(self.max_soc_fraction, initial_soc)) * capacity_kwh
+        self.min_soc = self.min_soc_fraction * capacity_kwh
+        self.max_soc = self.max_soc_fraction * capacity_kwh
 
-        Parameters
-        ----------
-        energy_kwh : float
-            Energy available for charging (kWh)
+        self.total_charged_kwh = 0.0
+        self.total_discharged_kwh = 0.0
 
-        Returns
-        -------
-        float
-            Energy actually stored (kWh)
-        """
-        energy_kwh = min(energy_kwh, self.max_charge_kw)
+    def charge(self, energy):
+        if energy <= 0:
+            return 0.0
 
-        available_capacity = self.capacity_kwh - self.soc
-
-        charged = min(
-            energy_kwh * self.charge_efficiency,
-            available_capacity
-        )
-
+        energy = min(energy, self.max_charge_kw)
+        space = self.max_soc - self.soc
+        charged = min(energy * self.efficiency, max(0.0, space))
         self.soc += charged
+        self.total_charged_kwh += charged
         return charged
 
-    # --------------------------------------------------
-    def discharge(self, energy_kwh):
-        """
-        Discharge the battery
+    def discharge(self, demand):
+        if demand <= 0:
+            return 0.0
 
-        Parameters
-        ----------
-        energy_kwh : float
-            Energy requested (kWh)
+        demand = min(demand, self.max_discharge_kw)
+        available = self.soc - self.min_soc
+        if self.efficiency == 0:
+            return 0.0
 
-        Returns
-        -------
-        float
-            Energy supplied (kWh)
-        """
-        energy_kwh = min(energy_kwh, self.max_discharge_kw)
-
-        available_energy = self.soc
-
-        discharged = min(
-            energy_kwh / self.discharge_efficiency,
-            available_energy
-        )
-
+        discharged = min(demand / self.efficiency, max(0.0, available))
         self.soc -= discharged
-        return discharged * self.discharge_efficiency
+        delivered = discharged * self.efficiency
+        self.total_discharged_kwh += delivered
+        return delivered
 
-    # --------------------------------------------------
     def get_soc(self):
-        """
-        Returns current State of Charge (SoC) in kWh
-        """
         return self.soc
 
-    # --------------------------------------------------
     def get_soc_percent(self):
-        """
-        Returns State of Charge as percentage
-        """
         return (self.soc / self.capacity_kwh) * 100
