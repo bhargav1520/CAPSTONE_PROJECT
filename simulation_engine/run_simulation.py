@@ -15,11 +15,11 @@ WEATHER_FILE = OUTPUTS_DIR / "weather_irradiance.csv"
 weather_csv = str(WEATHER_FILE) if WEATHER_FILE.exists() else None
 
 sim = HybridSystemSimulator(
-    load_file=str(OUTPUTS_DIR / "cleaned_hourly.csv"),
-    solar_kw=3,
-    battery_kwh=5,
-    battery_charge_kw=2,
-    battery_discharge_kw=2,
+    load_file=str(OUTPUTS_DIR / "monthly_synthetic_500kWh_30days.csv"),
+    solar_kw=50,
+    battery_kwh=20,
+    battery_charge_kw=10,
+    battery_discharge_kw=12,
     weather_irradiance_csv=weather_csv
 )
 
@@ -47,6 +47,6 @@ with open(formatted_output, 'w') as f:
     for key, value in summary.items():
         f.write(f"{key}: {value}\n")
 
-print("\n✅ Simulation successful!")
+print("\n Simulation successful!")
 print(f"Results saved to: {OUTPUTS_DIR / 'test_simulation.csv'}")
 print(f"Formatted results saved to: {formatted_output}")

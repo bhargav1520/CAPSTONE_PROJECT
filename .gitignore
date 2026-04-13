@@ -3,6 +3,11 @@
 # Exclude datasets folder (large files)
 Datasets/
 
+# Generated output files (synthetic load, weather data, results)
+outputs/monthly_synthetic_*.csv
+outputs/weather_irradiance_*.csv
+results/optimization_result_*.json
+
 # Byte-compiled / cache
 __pycache__/
 *.py[cod]

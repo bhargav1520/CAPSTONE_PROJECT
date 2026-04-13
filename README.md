@@ -99,8 +99,40 @@ Core implementation files:
 
 ## 5) Quick Start
 
+### IEMS Optimization (NEW - Recommended)
+
 ```bash
 pip install -r requirements.txt
+python -m optimization.main
+```
+
+**Interactive Inputs:**
+- Monthly electricity usage (kWh) - Check your electricity bill for "Units" or "kWh consumed"
+- System calculates tiered pricing automatically (realistic Indian slab rates)
+- Total budget for solar system (₹)
+- Location (bangalore, mumbai, delhi, etc.)
+- Number of days for load profile (default: 30)
+- Optional: Advanced options (population size, generations, mutation rate)
+
+**Tiered Pricing (Domestic):**
+- 0-50 kWh: ₹3/kWh
+- 50-100 kWh: ₹4.5/kWh
+- 100-200 kWh: ₹6/kWh
+- 200-500 kWh: ₹8/kWh
+- 500+ kWh: ₹12/kWh
+
+**Example for 350 kWh/month:**
+- Bill = (50×₹3) + (50×₹4.5) + (100×₹6) + (150×₹8) = **₹2,175**
+
+**Output:**
+- Optimal solar + battery sizing
+- System cost and budget utilization
+- Performance metrics (grid dependency, savings, etc.)
+- Results saved to `results/latest_optimization_result.json`
+
+### Legacy Simulation
+
+```bash
 python -m simulation_engine.run_simulation
 ```
 
@@ -109,12 +141,6 @@ Optional:
 
 ```bash
 python -m simulation_engine.weather_solar_fetch
-```
-
-- Run optimization:
-
-```bash
-python -m optimization.optimizer
 ```
 
 - Generate report JSON:

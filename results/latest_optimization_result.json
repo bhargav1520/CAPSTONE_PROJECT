@@ -1,0 +1,35 @@
+{
+    "timestamp": "2026-04-13T23:17:02.944761",
+    "user_inputs": {
+        "monthly_bill_inr": 6375.0,
+        "calculated_monthly_kwh": 750.0,
+        "budget_inr": 1500000.0,
+        "location": "kolkata",
+        "population_size": 80,
+        "generations": 90,
+        "mutation_rate": 0.1
+    },
+    "optimal_system": {
+        "solar_size_kw": 15.0,
+        "battery_size_kwh": 14.5,
+        "solar_panels_count": 38,
+        "battery_units": 1,
+        "total_cost_inr": 1478000.0,
+        "solar_panel_id": "SP_IND_001",
+        "battery_id": "BAT_IND_014"
+    },
+    "performance_metrics": {
+        "grid_dependency_percent": 69.5,
+        "solar_utilization_percent": 25.29,
+        "avg_battery_soc_percent": 21.54,
+        "estimated_savings_inr": 4170.0,
+        "fitness_score": 27.3752
+    },
+    "optimization_stats": {
+        "final_generation": 90,
+        "population_size": 80,
+        "final_fitness": 27.3752,
+        "initial_fitness": 27.339199999999998,
+        "total_improvement": 0.036000000000001364
+    }
+}
